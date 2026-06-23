@@ -14,7 +14,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "npm run build:seed && prisma db seed",
+    "prisma:seed": "prisma db seed",
+    "prisma:seed:dev": "npm run build:seed && prisma db seed",
     "prisma:studio": "prisma studio",
     "build:seed": "tsc prisma/seed.ts --outDir prisma --module commonjs --target ES2021 --esModuleInterop --skipLibCheck"
   },
