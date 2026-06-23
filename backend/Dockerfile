@@ -38,7 +38,10 @@ COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/scripts ./scripts
+
+RUN chmod +x scripts/start-prod.sh
 
 EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+CMD ["sh", "scripts/start-prod.sh"]

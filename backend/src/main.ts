@@ -3,13 +3,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { resolveCorsOrigin } from './config/cors.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS liberado para o frontend
   app.enableCors({
-    origin: true,
+    origin: resolveCorsOrigin(),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

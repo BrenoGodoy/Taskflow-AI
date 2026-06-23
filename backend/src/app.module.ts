@@ -5,6 +5,8 @@ import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
+import { HealthModule } from './health/health.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -12,6 +14,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ProjectsModule,
     TasksModule,
     DashboardModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
