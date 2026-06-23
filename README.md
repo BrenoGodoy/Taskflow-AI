@@ -196,6 +196,7 @@ Prefixo global: `/api`
 | DELETE | `/tasks/:id`                  | Remove tarefa                              |
 | POST   | `/tasks/suggest-priority`     | Sugere prioridade (IA local)               |
 | GET    | `/dashboard/stats`            | Métricas agregadas (filtro: projectId)     |
+| GET    | `/health`                     | Health check                               |
 
 Documentação interativa completa em **`/docs`** (Swagger).
 

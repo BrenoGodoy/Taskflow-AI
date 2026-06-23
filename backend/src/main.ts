@@ -3,13 +3,12 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { resolveCorsOrigin } from './config/cors.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: resolveCorsOrigin(),
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -40,6 +39,7 @@ async function bootstrap() {
     .addTag('projects', 'Gerenciamento de projetos')
     .addTag('tasks', 'Gerenciamento de tarefas')
     .addTag('dashboard', 'Métricas e estatísticas')
+    .addTag('health', 'Health check')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
