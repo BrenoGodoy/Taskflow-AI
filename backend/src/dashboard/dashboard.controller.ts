@@ -1,7 +1,14 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOperation, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  ApiHeader,
+  ApiOperation,
+  ApiPropertyOptional,
+  ApiTags,
+} from '@nestjs/swagger';
 import { IsOptional, IsUUID } from 'class-validator';
 import { DashboardService } from './dashboard.service';
+import { DemoSessionGuard } from '../common/guards/demo-session.guard';
+import { SessionId } from '../common/decorators/session-id.decorator';
 
 class DashboardQueryDto {
   @ApiPropertyOptional({ description: 'Filtra as métricas por projeto' })
@@ -11,6 +18,8 @@ class DashboardQueryDto {
 }
 
 @ApiTags('dashboard')
+@ApiHeader({ name: 'X-Demo-Session-Id', required: true })
+@UseGuards(DemoSessionGuard)
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
@@ -19,7 +28,7 @@ export class DashboardController {
   @ApiOperation({
     summary: 'Retorna métricas agregadas (total, atrasadas, por status/prioridade)',
   })
-  getStats(@Query() query: DashboardQueryDto) {
-    return this.dashboardService.getStats(query.projectId);
+  getStats(@SessionId() sessionId: string, @Query() query: DashboardQueryDto) {
+    return this.dashboardService.getStats(sessionId, query.projectId);
   }
 }

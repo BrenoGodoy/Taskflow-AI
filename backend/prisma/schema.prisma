@@ -21,30 +21,50 @@ enum TaskPriority {
   HIGH
 }
 
-model Project {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  tasks       Task[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+/// Workspace isolado de um visitante público (modo demo).
+/// Cada sessão tem seus próprios projetos/tarefas e expira após `expiresAt`.
+model DemoSession {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime
+  projects  Project[]
+  tasks     Task[]
 
+  @@index([expiresAt])
+  @@map("demo_sessions")
+}
+
+model Project {
+  id            String      @id @default(uuid())
+  name          String
+  description   String?
+  demoSession   DemoSession @relation(fields: [demoSessionId], references: [id], onDelete: Cascade)
+  demoSessionId String
+  tasks         Task[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([demoSessionId])
   @@map("projects")
 }
 
 model Task {
-  id          String       @id @default(uuid())
-  title       String
-  description String?
-  status      TaskStatus   @default(TODO)
-  priority    TaskPriority @default(MEDIUM)
-  deadline    DateTime?
-  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId   String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id            String       @id @default(uuid())
+  title         String
+  description   String?
+  status        TaskStatus   @default(TODO)
+  priority      TaskPriority @default(MEDIUM)
+  deadline      DateTime?
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId     String
+  demoSession   DemoSession  @relation(fields: [demoSessionId], references: [id], onDelete: Cascade)
+  demoSessionId String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([projectId])
   @@index([status])
+  @@index([demoSessionId])
   @@map("tasks")
 }

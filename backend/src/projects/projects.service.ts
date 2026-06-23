@@ -7,12 +7,15 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 export class ProjectsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateProjectDto) {
-    return this.prisma.project.create({ data: dto });
+  create(sessionId: string, dto: CreateProjectDto) {
+    return this.prisma.project.create({
+      data: { ...dto, demoSessionId: sessionId },
+    });
   }
 
-  findAll() {
+  findAll(sessionId: string) {
     return this.prisma.project.findMany({
+      where: { demoSessionId: sessionId },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { tasks: true } },
@@ -20,9 +23,9 @@ export class ProjectsService {
     });
   }
 
-  async findOne(id: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id },
+  async findOne(sessionId: string, id: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id, demoSessionId: sessionId },
       include: {
         tasks: { orderBy: { createdAt: 'desc' } },
       },
@@ -34,19 +37,21 @@ export class ProjectsService {
     return project;
   }
 
-  async update(id: string, dto: UpdateProjectDto) {
-    await this.ensureExists(id);
+  async update(sessionId: string, id: string, dto: UpdateProjectDto) {
+    await this.ensureExists(sessionId, id);
     return this.prisma.project.update({ where: { id }, data: dto });
   }
 
-  async remove(id: string) {
-    await this.ensureExists(id);
+  async remove(sessionId: string, id: string) {
+    await this.ensureExists(sessionId, id);
     await this.prisma.project.delete({ where: { id } });
     return { deleted: true, id };
   }
 
-  private async ensureExists(id: string) {
-    const exists = await this.prisma.project.findUnique({ where: { id } });
+  private async ensureExists(sessionId: string, id: string) {
+    const exists = await this.prisma.project.findFirst({
+      where: { id, demoSessionId: sessionId },
+    });
     if (!exists) {
       throw new NotFoundException(`Projeto com id "${id}" não encontrado.`);
     }

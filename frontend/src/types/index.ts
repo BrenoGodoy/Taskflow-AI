@@ -55,6 +55,11 @@ export interface DashboardStats {
   }>;
 }
 
+export interface DemoSession {
+  sessionId: string;
+  expiresAt: string;
+}
+
 export interface PrioritySuggestion {
   priority: TaskPriority;
   score: number;

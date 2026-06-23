@@ -5,6 +5,7 @@ import {
   Sparkles,
   CheckCircle2,
 } from 'lucide-react';
+import { DemoBanner } from './DemoBanner';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -87,6 +88,8 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        <DemoBanner />
 
         <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
           <div className="mx-auto max-w-6xl">

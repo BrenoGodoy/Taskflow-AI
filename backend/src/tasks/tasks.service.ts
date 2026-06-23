@@ -11,8 +11,8 @@ import { suggestPriority, PrioritySuggestion } from './ai/priority-suggester';
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateTaskDto) {
-    await this.ensureProjectExists(dto.projectId);
+  async create(sessionId: string, dto: CreateTaskDto) {
+    await this.ensureProjectInSession(sessionId, dto.projectId);
 
     return this.prisma.task.create({
       data: {
@@ -22,12 +22,14 @@ export class TasksService {
         priority: dto.priority,
         deadline: dto.deadline ? new Date(dto.deadline) : undefined,
         projectId: dto.projectId,
+        demoSessionId: sessionId,
       },
     });
   }
 
-  findAll(query: QueryTasksDto) {
+  findAll(sessionId: string, query: QueryTasksDto) {
     const where: Prisma.TaskWhereInput = {
+      demoSessionId: sessionId,
       ...(query.projectId ? { projectId: query.projectId } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.priority ? { priority: query.priority } : {}),
@@ -42,9 +44,9 @@ export class TasksService {
     });
   }
 
-  async findOne(id: string) {
-    const task = await this.prisma.task.findUnique({
-      where: { id },
+  async findOne(sessionId: string, id: string) {
+    const task = await this.prisma.task.findFirst({
+      where: { id, demoSessionId: sessionId },
       include: { project: { select: { id: true, name: true } } },
     });
 
@@ -54,11 +56,11 @@ export class TasksService {
     return task;
   }
 
-  async update(id: string, dto: UpdateTaskDto) {
-    await this.ensureExists(id);
+  async update(sessionId: string, id: string, dto: UpdateTaskDto) {
+    await this.ensureExists(sessionId, id);
 
     if (dto.projectId) {
-      await this.ensureProjectExists(dto.projectId);
+      await this.ensureProjectInSession(sessionId, dto.projectId);
     }
 
     return this.prisma.task.update({
@@ -70,8 +72,8 @@ export class TasksService {
     });
   }
 
-  async remove(id: string) {
-    await this.ensureExists(id);
+  async remove(sessionId: string, id: string) {
+    await this.ensureExists(sessionId, id);
     await this.prisma.task.delete({ where: { id } });
     return { deleted: true, id };
   }
@@ -84,16 +86,18 @@ export class TasksService {
     return suggestPriority(dto);
   }
 
-  private async ensureExists(id: string) {
-    const exists = await this.prisma.task.findUnique({ where: { id } });
+  private async ensureExists(sessionId: string, id: string) {
+    const exists = await this.prisma.task.findFirst({
+      where: { id, demoSessionId: sessionId },
+    });
     if (!exists) {
       throw new NotFoundException(`Tarefa com id "${id}" não encontrada.`);
     }
   }
 
-  private async ensureProjectExists(projectId: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
+  private async ensureProjectInSession(sessionId: string, projectId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, demoSessionId: sessionId },
     });
     if (!project) {
       throw new NotFoundException(

@@ -23,8 +23,11 @@ export interface DashboardStats {
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getStats(projectId?: string): Promise<DashboardStats> {
-    const where = projectId ? { projectId } : {};
+  async getStats(sessionId: string, projectId?: string): Promise<DashboardStats> {
+    const where = {
+      demoSessionId: sessionId,
+      ...(projectId ? { projectId } : {}),
+    };
     const now = new Date();
 
     const [
@@ -38,7 +41,7 @@ export class DashboardService {
       this.prisma.task.count({ where }),
       projectId
         ? Promise.resolve(1)
-        : this.prisma.project.count(),
+        : this.prisma.project.count({ where: { demoSessionId: sessionId } }),
       this.prisma.task.count({
         where: {
           ...where,

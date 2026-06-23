@@ -38,6 +38,7 @@ Playground interativo que analisa título, descrição e prazo para sugerir prio
 - **Dashboard** — total de tarefas, tarefas atrasadas, conclusão (%), distribuição por status e por prioridade (gráficos) e próximos prazos.
 - **IA de Prioridade (local)** — endpoint que sugere a prioridade a partir do título, descrição e prazo, retornando **score, confiança e os motivos** da decisão. Lógica 100% explicável, sem chamadas externas.
 - **Frontend moderno e responsivo** — React + TailwindCSS, layout com sidebar, modais e gráficos.
+- **Modo demo isolado por visitante** — cada visitante recebe um workspace próprio (projetos/tarefas) que não interfere no de outras pessoas. Veja a seção [Modo demo](#-modo-demo-isolado-por-visitante).
 - **Swagger** — documentação interativa da API.
 
 ---
@@ -63,17 +64,21 @@ Playground interativo que analisa título, descrição e prazo para sugerir prio
 ├── backend/
 │   ├── Dockerfile
 │   ├── prisma/
-│   │   ├── schema.prisma       # Modelos Project e Task + enums
-│   │   └── seed.ts             # Dados iniciais
+│   │   ├── schema.prisma       # Modelos DemoSession, Project e Task + enums
+│   │   └── seed.ts             # Sem seed global (dados são por sessão demo)
 │   └── src/
 │       ├── main.ts             # Bootstrap, CORS, ValidationPipe, Swagger
 │       ├── app.module.ts
-│       ├── common/filters/     # Filtro global de exceções
+│       ├── common/
+│       │   ├── decorators/     # @SessionId() (id da sessão demo)
+│       │   ├── filters/        # Filtro global de exceções
+│       │   └── guards/         # DemoSessionGuard (valida X-Demo-Session-Id)
 │       ├── prisma/             # PrismaModule + PrismaService (global)
-│       ├── projects/           # CRUD de projetos
+│       ├── demo/               # Sessões demo isoladas (criar/resetar/limpar)
+│       ├── projects/           # CRUD de projetos (escopado por sessão)
 │       ├── tasks/              # CRUD de tarefas + IA de prioridade
 │       │   └── ai/priority-suggester.ts
-│       └── dashboard/          # Métricas agregadas
+│       └── dashboard/          # Métricas agregadas (escopadas por sessão)
 └── frontend/
     ├── Dockerfile
     ├── nginx.conf
@@ -102,7 +107,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-O backend automaticamente aplica as **migrations**, executa o **seed** e sobe a API.
+O backend automaticamente aplica as **migrations** e sobe a API. Não há seed global: cada visitante recebe seu próprio workspace ao acessar o app (veja [Modo demo](#-modo-demo-isolado-por-visitante)).
 
 | Serviço      | URL                              |
 | ------------ | -------------------------------- |
@@ -132,7 +137,6 @@ cp .env.example .env          # ajuste DATABASE_URL se necessário
 npm install
 npm run prisma:generate
 npm run prisma:migrate        # cria as tabelas
-npm run prisma:seed           # popula dados de exemplo
 npm run start:dev             # http://localhost:3000/api
 ```
 
@@ -179,6 +183,29 @@ curl -X POST http://localhost:3000/api/tasks/suggest-priority \
 
 ---
 
+## 🧪 Modo demo isolado por visitante
+
+Como o app é **público e sem login**, os dados são isolados por visitante para que ninguém altere o que outra pessoa está vendo. Funciona assim:
+
+1. Ao abrir o app, o frontend procura um `demoSessionId` no `localStorage`.
+2. Se não existir, chama `POST /api/demo/session`. O backend cria um **workspace demo** (`DemoSession`) com **UUID**, **`expiresAt`** e popula os dados iniciais: **2 projetos** com tarefas cobrindo todos os status (`TODO`/`DOING`/`DONE`) e prioridades (`LOW`/`MEDIUM`/`HIGH`).
+3. O frontend salva o `demoSessionId` no `localStorage`.
+4. Toda requisição de projetos, tarefas, dashboard e Kanban envia o header **`X-Demo-Session-Id`** (anexado automaticamente pelo Axios).
+5. O backend valida o header via `DemoSessionGuard` e **filtra todas as queries** por `demoSessionId` — um visitante nunca acessa ou altera dados de outro.
+6. O botão **"Resetar minha demo"** (`POST /api/demo/reset`) restaura os dados iniciais apenas da sessão atual.
+7. Sessões expiradas são removidas automaticamente (limpeza periódica interna a cada 6h + `DELETE /api/demo/cleanup`), o que apaga em cascata seus projetos e tarefas.
+
+### Configuração (backend `.env`)
+
+| Variável                 | Padrão | Descrição                                                        |
+| ------------------------ | ------ | ---------------------------------------------------------------- |
+| `DEMO_SESSION_TTL_HOURS` | `24`   | Tempo de vida de cada sessão demo antes de expirar.             |
+| `ADMIN_RESET_SECRET`     | —      | Se definido, exige o header `X-Admin-Secret` em `/demo/cleanup`. |
+
+> **Compatibilidade**: tudo continua funcionando em Docker, PostgreSQL e no deploy Railway (backend) + Vercel (frontend). Em produção, garanta que o CORS permita o header `X-Demo-Session-Id` (já configurado em `main.ts`).
+
+---
+
 ## 📡 Principais endpoints da API
 
 Prefixo global: `/api`
@@ -196,7 +223,13 @@ Prefixo global: `/api`
 | DELETE | `/tasks/:id`                  | Remove tarefa                              |
 | POST   | `/tasks/suggest-priority`     | Sugere prioridade (IA local)               |
 | GET    | `/dashboard/stats`            | Métricas agregadas (filtro: projectId)     |
+| POST   | `/demo/session`               | Cria uma sessão demo isolada (+ dados iniciais) |
+| GET    | `/demo/session`               | Metadados da sessão demo atual             |
+| POST   | `/demo/reset`                 | Reseta os dados da sessão demo atual       |
+| DELETE | `/demo/cleanup`               | Remove sessões demo expiradas              |
 | GET    | `/health`                     | Health check                               |
+
+> Exceto `/demo/session` (criação), `/tasks/suggest-priority` e `/health`, as rotas de **projetos, tarefas, dashboard** e demo exigem o header `X-Demo-Session-Id`. O frontend envia esse header automaticamente.
 
 Documentação interativa completa em **`/docs`** (Swagger).
 
@@ -208,7 +241,7 @@ Documentação interativa completa em **`/docs`** (Swagger).
 - **DTOs validados** com `class-validator` + `ValidationPipe` global (whitelist + transform).
 - **Tratamento global de erros** com formato de resposta padronizado e mapeamento de erros do Prisma.
 - **Prisma schema** bem definido com enums, relações e índices.
-- **Seed** idempotente com dados realistas.
+- **Modo demo isolado** por sessão (`DemoSession`) com guard, escopo por `demoSessionId` e limpeza automática de sessões expiradas.
 - **Swagger** configurado e tagueado por domínio.
 
 ---

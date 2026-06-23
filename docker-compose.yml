@@ -32,8 +32,9 @@ services:
       NODE_ENV: production
     ports:
       - "${BACKEND_PORT:-3000}:3000"
-    # Roda migrations + seed e sobe a API
-    command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"
+    # Aplica migrations e sobe a API. Não há seed global: cada visitante
+    # recebe seu próprio workspace via POST /api/demo/session.
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
 
   frontend:
     build:

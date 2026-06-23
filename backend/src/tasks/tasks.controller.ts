@@ -7,13 +7,16 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueryTasksDto } from './dto/query-tasks.dto';
 import { SuggestPriorityDto } from './dto/suggest-priority.dto';
+import { DemoSessionGuard } from '../common/guards/demo-session.guard';
+import { SessionId } from '../common/decorators/session-id.decorator';
 
 @ApiTags('tasks')
 @Controller('tasks')
@@ -21,9 +24,11 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Post()
+  @UseGuards(DemoSessionGuard)
+  @ApiHeader({ name: 'X-Demo-Session-Id', required: true })
   @ApiOperation({ summary: 'Cria uma nova tarefa' })
-  create(@Body() dto: CreateTaskDto) {
-    return this.tasksService.create(dto);
+  create(@SessionId() sessionId: string, @Body() dto: CreateTaskDto) {
+    return this.tasksService.create(sessionId, dto);
   }
 
   @Post('suggest-priority')
@@ -38,28 +43,40 @@ export class TasksController {
   }
 
   @Get()
+  @UseGuards(DemoSessionGuard)
+  @ApiHeader({ name: 'X-Demo-Session-Id', required: true })
   @ApiOperation({
     summary: 'Lista tarefas (filtros opcionais: projectId, status, priority)',
   })
-  findAll(@Query() query: QueryTasksDto) {
-    return this.tasksService.findAll(query);
+  findAll(@SessionId() sessionId: string, @Query() query: QueryTasksDto) {
+    return this.tasksService.findAll(sessionId, query);
   }
 
   @Get(':id')
+  @UseGuards(DemoSessionGuard)
+  @ApiHeader({ name: 'X-Demo-Session-Id', required: true })
   @ApiOperation({ summary: 'Busca uma tarefa por id' })
-  findOne(@Param('id') id: string) {
-    return this.tasksService.findOne(id);
+  findOne(@SessionId() sessionId: string, @Param('id') id: string) {
+    return this.tasksService.findOne(sessionId, id);
   }
 
   @Patch(':id')
+  @UseGuards(DemoSessionGuard)
+  @ApiHeader({ name: 'X-Demo-Session-Id', required: true })
   @ApiOperation({ summary: 'Atualiza uma tarefa' })
-  update(@Param('id') id: string, @Body() dto: UpdateTaskDto) {
-    return this.tasksService.update(id, dto);
+  update(
+    @SessionId() sessionId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateTaskDto,
+  ) {
+    return this.tasksService.update(sessionId, id, dto);
   }
 
   @Delete(':id')
+  @UseGuards(DemoSessionGuard)
+  @ApiHeader({ name: 'X-Demo-Session-Id', required: true })
   @ApiOperation({ summary: 'Remove uma tarefa' })
-  remove(@Param('id') id: string) {
-    return this.tasksService.remove(id);
+  remove(@SessionId() sessionId: string, @Param('id') id: string) {
+    return this.tasksService.remove(sessionId, id);
   }
 }

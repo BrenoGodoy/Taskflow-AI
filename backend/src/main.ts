@@ -10,6 +10,7 @@ async function bootstrap() {
   app.enableCors({
     origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Demo-Session-Id'],
     credentials: true,
   });
 
@@ -39,6 +40,7 @@ async function bootstrap() {
     .addTag('projects', 'Gerenciamento de projetos')
     .addTag('tasks', 'Gerenciamento de tarefas')
     .addTag('dashboard', 'Métricas e estatísticas')
+    .addTag('demo', 'Sessões demo isoladas por visitante')
     .addTag('health', 'Health check')
     .build();
   const document = SwaggerModule.createDocument(app, config);

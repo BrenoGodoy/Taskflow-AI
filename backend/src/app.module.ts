@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { DemoModule } from './demo/demo.module';
 
 import { HealthModule } from './health/health.module';
 
@@ -14,6 +15,7 @@ import { HealthModule } from './health/health.module';
     ProjectsModule,
     TasksModule,
     DashboardModule,
+    DemoModule,
     HealthModule,
   ],
 })
