@@ -186,6 +186,3 @@ Documentação interativa completa em **`/docs`** (Swagger).
 
 ---
 
-## 📄 Licença
-
-MIT — sinta-se livre para usar como base de estudo ou portfólio.
