@@ -6,6 +6,30 @@ Projeto pensado como peça de portfólio: código limpo, modular, validado, docu
 
 ---
 
+## 📸 Preview
+
+Interface moderna, responsiva e pronta para portfólio — veja como o app se comporta **sem precisar clonar ou rodar localmente**:
+
+### Dashboard
+
+Visão geral com métricas, gráficos por status/prioridade e próximos prazos.
+
+![Dashboard — métricas, gráficos e próximos prazos](docs/screenshots/dashboard.png)
+
+### Projetos
+
+Gerenciamento de projetos com contagem de tarefas e acesso direto ao quadro Kanban.
+
+![Projetos — cards com CRUD e link para o Kanban](docs/screenshots/projetos.png)
+
+### IA de Prioridade
+
+Playground interativo que analisa título, descrição e prazo para sugerir prioridade com score e motivos explicáveis.
+
+![IA de Prioridade — heurística local sem APIs externas](docs/screenshots/ia-prioridade.png)
+
+---
+
 ## ✨ Funcionalidades
 
 - **Projetos** — CRUD completo (nome + descrição).
@@ -34,6 +58,8 @@ Projeto pensado como peça de portfólio: código limpo, modular, validado, docu
 .
 ├── docker-compose.yml          # Orquestra postgres + backend + frontend
 ├── .env.example                # Variáveis usadas pelo docker-compose
+├── docs/
+│   └── screenshots/            # Capturas de tela para o README
 ├── backend/
 │   ├── Dockerfile
 │   ├── prisma/
@@ -67,7 +93,7 @@ Pré-requisitos: **Docker** e **Docker Compose**.
 
 ```bash
 # 1. Clone o repositório e entre na pasta
-cd Projetos
+cd Taskflow-AI
 
 # 2. Crie o .env a partir do exemplo
 cp .env.example .env
