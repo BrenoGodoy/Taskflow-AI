@@ -4,6 +4,8 @@ Gerenciador de tarefas moderno **fullstack** com backend em **NestJS** e fronten
 
 Projeto pensado como peça de portfólio: código limpo, modular, validado, documentado via Swagger e pronto para subir com **Docker Compose**.
 
+**Demo online:** [https://taskflow-ai-xi-five.vercel.app](https://taskflow-ai-xi-five.vercel.app)
+
 ---
 
 ## 📸 Preview
